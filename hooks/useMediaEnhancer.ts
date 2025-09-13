@@ -28,7 +28,7 @@ export const useMediaEnhancer = (onEnhancementComplete: (item: EnhancementHistor
   }, [reset]);
 
   const enhanceMedia = useCallback(async () => {
-    if (!originalFile || !originalUrl) return;
+    if (!originalFile) return;
 
     setIsLoading(true);
     setError(null);
@@ -44,11 +44,15 @@ export const useMediaEnhancer = (onEnhancementComplete: (item: EnhancementHistor
       const finalEnhancedUrl = `data:${originalFile.type};base64,${enhancedBase64}`;
       
       setEnhancedUrl(finalEnhancedUrl);
+      
+      // The originalUrl from state is a temporary blob URL that gets revoked.
+      // For a persistent history item, we create a permanent data URL.
+      const originalDataUrl = `data:${originalFile.type};base64,${base64}`;
 
       onEnhancementComplete({
         id: crypto.randomUUID(),
         type: 'image',
-        originalUrl,
+        originalUrl: originalDataUrl,
         enhancedUrl: finalEnhancedUrl,
         prompt: 'Studio Effect Applied',
         timestamp: Date.now(),
@@ -60,7 +64,7 @@ export const useMediaEnhancer = (onEnhancementComplete: (item: EnhancementHistor
     } finally {
       setIsLoading(false);
     }
-  }, [originalFile, originalUrl, onEnhancementComplete]);
+  }, [originalFile, onEnhancementComplete]);
 
   return {
     originalUrl,
