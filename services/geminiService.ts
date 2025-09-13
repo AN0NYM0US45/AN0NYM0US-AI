@@ -64,9 +64,28 @@ export const enhanceImage = async (base64ImageData: string, mimeType: string): P
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     if (error instanceof Error) {
-      // Propagate a more user-friendly error message.
-      throw new Error(`API request failed: ${error.message}`);
+      const errorMessage = error.message;
+
+      // Check for the specific quota error string. This is safer than always parsing JSON.
+      if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('"code":429')) {
+        throw new Error("You've exceeded the free usage quota for today. Please try again tomorrow.");
+      }
+
+      // For other errors, try to extract a cleaner message if it's JSON.
+      try {
+        const errorDetails = JSON.parse(errorMessage);
+        if (errorDetails?.error?.message) {
+          // Return a cleaner message from the API error object.
+          throw new Error(`Image enhancement failed: ${errorDetails.error.message}`);
+        }
+      } catch (e) {
+        // Not a JSON error message, fall through to the default behavior below.
+      }
+      
+      // Default behavior for other errors.
+      throw new Error(`API request failed: ${errorMessage}`);
     }
+    // Fallback for non-Error types.
     throw new Error("An unknown error occurred during the API request.");
   }
 };
