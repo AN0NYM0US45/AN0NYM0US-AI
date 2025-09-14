@@ -68,7 +68,7 @@ export const enhanceImage = async (base64ImageData: string, mimeType: string): P
 
       // Check for the specific quota error string. This is safer than always parsing JSON.
       if (errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('"code":429')) {
-        throw new Error("You've exceeded the free usage quota for today. Please try again tomorrow.");
+        throw new Error("API usage limit reached. This could be the free daily quota (which resets at midnight UTC) or a rate limit. Please wait and try again later.");
       }
 
       // For other errors, try to extract a cleaner message if it's JSON.
